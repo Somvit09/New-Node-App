@@ -7,9 +7,14 @@ require('dotenv').config(); // load varialbles from .env
 const port = process.env.PORT;
 const database = process.env.DATABASE_NAME;
 // for otp
+const twilio = require('twilio');
 const twilioAccountSid = process.env.YOUR_TWILIO_ACCOUNT_SID;
 const twilioAuthToken = process.env.YOUR_TWILIO_AUTH_TOKEN;
 const twilioPhoneNumber = process.env.YOUR_TWILIO_PHONE_NUMBER;
+
+
+// initializing the Twilio client
+const client = twilio(twilioAccountSid, twilioAuthToken);
 
 
 // Middlewares
@@ -33,6 +38,7 @@ db.once('open', () => {   //sets up an event listener for the 'open' event of th
 const Apparel = require('./models/apparel_model');
 const Customer = require('./models/customer_model');
 const Merchant = require('./models/merchant_model');
+const OTP = require('./models/otpModel');
 
 // Create an Apparel
 
@@ -101,6 +107,57 @@ app.delete('/apparel/:id', async(req, res) => {
         res.status(500).json({error: err.message});
     }
 });
+
+
+// Helper function to generate a random OTP
+function generateRandomOTP() {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+
+// otp generation and verification
+app.post('/send_otp/phoneNumber', async (req, res) => {
+    const phoneNumberToSendOTP = req.params.phoneNumber;
+    const otp = generateRandomOTP();
+
+    // stored the otp to the model
+
+    await OTP.create({ phoneNumber, otp});
+
+    // send otp to the user mobile number
+    try {
+        client.messages.create({
+            body: `Your otp is ${otp}.`,
+            from: twilioPhoneNumber,
+            to: phoneNumberToSendOTP,
+        })
+        console.log(`Your OTP is sent to the mobile number ${phoneNumberToSendOTP}`);
+        res.status(200).json({message: `OTP sent Successfully. otp is ${otp}.`});
+    } catch (error) {
+        console.log(`Failed to send otp to the phone number ${phoneNumberToSendOTP}.`);
+        res.status(500).json({error: error.message});
+    }
+
+});
+
+// otp validation
+app.post('/veryfy_otp/user_opt', async (req, res) => {
+    const {phoneNumber} = req.body.phoneNumber;
+    const otp = re.params.user_otp;
+
+    try {
+        const storedOTP = await OTP.findOne({phoneNumber, otp});
+        if (storedOTP) {
+            res.status(200).json({message: `OTP verified successfully`});
+        } else {
+            res.status(400).json({error: "Invalid OTP."});
+        }
+
+    } catch (err) {
+        res.status(500).json({error: err.message});
+    }
+});
+
 
 
 app.listen(port, () => {
