@@ -116,23 +116,23 @@ function generateRandomOTP() {
 
 
 // otp generation and verification
-app.post('/send_otp/phoneNumber', async (req, res) => {
-    const phoneNumberToSendOTP = req.params.phoneNumber;
+app.post('/send_otp', async (req, res) => {
+    const phoneNumberToSendOTP = req.body.phoneNumber;
     const otp = generateRandomOTP();
 
     // stored the otp to the model
 
-    await OTP.create({ phoneNumber, otp});
+    await OTP.create({ phoneNumber:phoneNumberToSendOTP, otp:otp});
 
     // send otp to the user mobile number
     try {
         client.messages.create({
-            body: `Your otp is ${otp}.`,
+            body: `Your otp is ${otp}. It will be valid for 5 minutes.`,
             from: twilioPhoneNumber,
             to: phoneNumberToSendOTP,
         })
-        console.log(`Your OTP is sent to the mobile number ${phoneNumberToSendOTP}`);
-        res.status(200).json({message: `OTP sent Successfully. otp is ${otp}.`});
+        console.log(`Your OTP is sent to the mobile number ${phoneNumberToSendOTP}.`);
+        res.status(200).json({message: `OTP sent Successfully. otp is ${otp}. It will be valid for 5 minutes.`});
     } catch (error) {
         console.log(`Failed to send otp to the phone number ${phoneNumberToSendOTP}.`);
         res.status(500).json({error: error.message});
@@ -141,13 +141,12 @@ app.post('/send_otp/phoneNumber', async (req, res) => {
 });
 
 // otp validation
-app.post('/veryfy_otp/user_opt', async (req, res) => {
-    const {phoneNumber} = req.body.phoneNumber;
-    const otp = re.params.user_otp;
+app.post('/veryfy_otp', async (req, res) => {
+    const {phoneNumber, user_otp} = req.body;
 
     try {
-        const storedOTP = await OTP.findOne({phoneNumber, otp});
-        if (storedOTP) {
+        const storedOTP = await OTP.findOne({phoneNumber:phoneNumber, otp:user_otp});
+        if (storedOTP && storedOTP.otp === user_otp) {
             res.status(200).json({message: `OTP verified successfully`});
         } else {
             res.status(400).json({error: "Invalid OTP."});
