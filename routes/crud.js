@@ -22,7 +22,7 @@ router.get('/', getAllApparels)
 router.post('/', createApparel)
 
 // update a apparel
-router.patch('/:id', updateApparel);
+router.put('/:id', updateApparel);
 
 
 // delete a apparel

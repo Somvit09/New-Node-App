@@ -59,7 +59,6 @@ const deleteApparel = async(req, res) => {
 
 const updateApparel = async (req, res) => {
     try {
-        console.log('Received update request:', req.body); // Log the incoming request body
         const { id } = req.params;
         const updatedApparel = await Apparel.findOneAndUpdate(
             { apparelID: id },
@@ -67,7 +66,6 @@ const updateApparel = async (req, res) => {
                 ...req.body
             }
         );
-        console.log('Updated apparel:', updatedApparel); // Log the updated apparel
         if (!updatedApparel) {
             return res.status(404).json({ error: 'Apparel not found' });
         }
