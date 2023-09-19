@@ -67,6 +67,8 @@ app.use('/login', otpRouters)
 
 app.use('/register', otpRouters)
 
+
+// authentication required for this route using authenticationToken middleware
 app.post('/protected_route', authenticationToken, (req, res) => {
     const userEmail = req.user.newOrExistedUser.userEmail
     console.log(userEmail)
