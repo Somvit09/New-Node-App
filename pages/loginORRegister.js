@@ -1,6 +1,8 @@
 const OTP = require('../models/otpModel')
 const User = require("../models/userModel")
 const mongoose = require("mongoose")
+const jwt = require("jsonwebtoken")
+require('dotenv').config()
 
 // for otp
 const twilio = require('twilio');
@@ -31,16 +33,16 @@ const sendOTP = async (req, res) => {
     // send otp to the user mobile number
     try {
         console.log(`Your OTP is sent to the mobile number ${phoneNumberToSendOTP}.`);
-        const newUser = await User.findOne({
+        const newOrExistedUser = await User.findOne({
             userEmail:email, 
             userPhoneNumber: phoneNumberToSendOTP,
         })
-        if (newUser) {
+        if (newOrExistedUser) {
             /// we need to think about something if a user already existed
             res.status(200).json({"message": "User already existed"});
             return
         } else {
-            await User.create({
+            const newOrExistedUser = await User.create({
                 userEmail:email, 
                 userPhoneNumber: phoneNumberToSendOTP,
                 isMerchant: isMerchant,
@@ -52,7 +54,15 @@ const sendOTP = async (req, res) => {
             from: twilioPhoneNumber,
             to: phoneNumberToSendOTP,
         })
-        res.status(200).json({message: `OTP sent Successfully. otp is ${otp}. It will be valid for 5 minutes.`});
+        // json we token generation for authentication
+        const token = jwt.sign({newOrExistedUser}, process.env.JWT_SECRET, {
+            expiresIn: "1h", // expires in 1 hour
+        })
+        console.log(token)
+        res.status(200).json({
+            message: `OTP sent Successfully. otp is ${otp}. It will be valid for 5 minutes.`,
+            token: token,  // including the jwt token
+        });
     } catch (error) {
         console.log(`Failed to send otp to the phone number ${phoneNumberToSendOTP}.`);
         res.status(500).json({error: error.message});

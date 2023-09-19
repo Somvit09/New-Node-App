@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors'); //Cross-Origin Resource Sharing (CORS) middleware
 const multer = require('multer'); // middleware for handling file uploads
+const jwt = require("jsonwebtoken")
 
 const app = express();
 
@@ -19,6 +20,22 @@ const otpRouters = require("./routes/loginOrRegistrationRoute")
 // Middlewares
 app.use(express.json());
 app.use(cors());
+function authenticationToken(req, res, next) {
+    const token = req.header("Authorization")
+    if (!token) {
+        return res.status(400).json({
+            error: "Unauthorized"
+        })
+    }
+    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+        if (err) {
+            return res.status(403).json({error: "Token is not valid"})
+        }
+        req.user = decoded
+        next()
+    })
+}
+
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGO_URI + database, {
