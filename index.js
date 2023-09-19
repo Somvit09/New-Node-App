@@ -32,6 +32,7 @@ function authenticationToken(req, res, next) {
             return res.status(403).json({error: "Token is not valid"})
         }
         req.user = decoded
+        //console.log(req.user)
         next()
     })
 }
@@ -66,6 +67,11 @@ app.use('/login', otpRouters)
 
 app.use('/register', otpRouters)
 
+app.post('/protected_route', authenticationToken, (req, res) => {
+    const userEmail = req.user.newOrExistedUser.userEmail
+    console.log(userEmail)
+    res.status(200).json({message: userEmail})
+})
 
 
 app.listen(port, () => {

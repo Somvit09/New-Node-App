@@ -39,8 +39,7 @@ const sendOTP = async (req, res) => {
         })
         if (newOrExistedUser) {
             /// we need to think about something if a user already existed
-            res.status(200).json({"message": "User already existed"});
-            return
+            console.log("User already existed");
         } else {
             const newOrExistedUser = await User.create({
                 userEmail:email, 

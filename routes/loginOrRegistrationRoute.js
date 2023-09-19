@@ -1,6 +1,6 @@
 const express = require('express')
 
-const { sendOTP, verifyOTP } = require("../pages/loginORRegister")
+const { sendOTP, verifyOTP, } = require("../pages/loginORRegister")
 
 const router_otp = express.Router()
 
