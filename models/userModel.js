@@ -6,7 +6,8 @@ const userSchema = mongoose.Schema({
     userEmail: String,
     userPhoneNumber: String,
     isMerchant: Boolean,
-    isCustomer: Boolean
+    isCustomer: Boolean,
+    password: String
 });
 
 const User = mongoose.model('User', userSchema);
