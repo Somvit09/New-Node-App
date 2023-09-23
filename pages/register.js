@@ -77,7 +77,7 @@ const register = async (req, res) => {
         // stored the otp to the model
         await OTP.create({ phoneNumber:phoneNumberToSendOTP, otp:otp});
 
-        res.status(200).json({
+        res.status(201).json({
             message: `OTP sent Successfully. otp is ${otp}. It will be valid for 5 minutes.`,
             token: token,  // include the JWT token in the response
             redirectURL: `/verify-otp?email=${email}&phoneNumber=${phoneNumberToSendOTP}`,

@@ -106,6 +106,7 @@ app.post('/upload_image', upload.single('image'), async (req, res) => {
             return res.status(400).json({error: "No file Uploaded."})
         } 
         const imageUrl = '/uploads/' + fileName
+        console.log(imageUrl)
         res.status(201).json({
             'imageURL': imageUrl,
             'success': "Uploaded"
