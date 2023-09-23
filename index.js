@@ -35,7 +35,6 @@ const database = process.env.DATABASE_NAME;
 
 // router configuration
 const apparelRoutes = require("./routes/crud")
-const otpRouters = require("./routes/loginOrRegistrationRoute")
 const loginRouter = require("./routes/loginRoute")
 const registerRouter = require('./routes/registerRoute')
 

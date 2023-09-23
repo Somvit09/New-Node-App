@@ -28,7 +28,10 @@ const register = async (req, res) => {
 
     // Check if passwords match
     if (password !== retyppedPassword) {
-        return res.status(401).json({ message: "Password and retyped password don't match." });
+        return res.status(401).json({ 
+            message: "Password and retyped password don't match.",
+            redirectURL: `/register?email=${email}&phoneNumber=${phoneNumberToSendOTP}`
+        });
     }
 
     try {
@@ -40,7 +43,10 @@ const register = async (req, res) => {
 
         if (existingUser) {
             console.log("User already exists");
-            return res.status(409).json({ message: "User already exists" });
+            return res.status(409).json({ 
+                message: "User already exists",
+                redirectURL: '/login',
+            });
         }
 
         // Hash the password
@@ -68,14 +74,20 @@ const register = async (req, res) => {
             to: phoneNumberToSendOTP,
         });
 
+        // stored the otp to the model
+        await OTP.create({ phoneNumber:phoneNumberToSendOTP, otp:otp});
+
         res.status(200).json({
             message: `OTP sent Successfully. otp is ${otp}. It will be valid for 5 minutes.`,
             token: token,  // include the JWT token in the response
             redirectURL: `/verify-otp?email=${email}&phoneNumber=${phoneNumberToSendOTP}`,
         });
     } catch (error) {
-        console.log(`Failed to send OTP to the phone number ${phoneNumberToSendOTP}.`, error);
-        res.status(500).json({ error: "Failed to register user" });
+        console.log(`Failed to send OTP to the phone number ${phoneNumberToSendOTP}.`, error.message);
+        res.status(500).json({ 
+            error: `Failed to register user. ${error.message}`,
+            redirectURL: `/register?email=${email}&phoneNumber=${phoneNumberToSendOTP}`
+        });
     }
 }
 
@@ -90,7 +102,10 @@ const verifyOTP = async (req, res) => {
         if (storedOTP && storedOTP.otp === user_otp) {
             res.status(200).json({ message: "OTP verified successfully" });
         } else {
-            res.status(400).json({ error: "Invalid OTP" });
+            res.status(400).json({ 
+                error: "Invalid OTP",
+                redirectURL: `/register?phoneNumber=${phoneNumber}&otp=${user_otp}`
+            });
         }
     } catch (err) {
         console.error("Error verifying OTP:", err);
