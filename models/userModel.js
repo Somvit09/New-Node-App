@@ -3,6 +3,7 @@
 const mongoose = require('mongoose')
 
 const userSchema = mongoose.Schema({
+    name: String,
     userEmail: String,
     userPhoneNumber: String,
     isMerchant: Boolean,

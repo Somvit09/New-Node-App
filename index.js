@@ -37,6 +37,7 @@ const database = process.env.DATABASE_NAME;
 const apparelRoutes = require("./routes/crud")
 const loginRouter = require("./routes/loginRoute")
 const registerRouter = require('./routes/registerRoute')
+const forgotPasswordRouter = require("./routes/forgotPasswordRoute")
 
 
 // Middlewares
@@ -90,6 +91,8 @@ app.use('/login', loginRouter)
 
 app.use('/register', registerRouter)
 
+app.use('/forgot-password', forgotPasswordRouter)
+
 
 // authentication required for this route using authenticationToken middleware
 app.post('/protected_route', authenticationToken, (req, res) => {
@@ -116,6 +119,7 @@ app.post('/upload_image', upload.single('image'), async (req, res) => {
         res.status(500).json({error: err.message})
     }
 })
+
 
 
 app.listen(port, () => {
