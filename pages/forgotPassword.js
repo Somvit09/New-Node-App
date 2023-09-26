@@ -69,12 +69,18 @@ const forgotPassword = async (req, res) => {
         // stored the otp to the model
         await OTP.create({ phoneNumber: phoneNumber, otp: otp });
 
+        // still thinking about this jwt required in authentication or not
+        const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
+            expiresIn: "1h", // expires in 1 hour
+        });
+
         // sending otp to email
         await sendOTPByEmail(email, otp)
 
         res.status(200).json({
             message: `OTP sent Successfully. It will be valid for 5 minutes. otp = ${otp}`,
-            redirectURL: `/verify-otp?email=${email}&phoneNumber=${phoneNumber}`
+            redirectURL: `/verify-otp?email=${email}&phoneNumber=${phoneNumber}`,
+            token: token
         });
 
     } catch (err) {
@@ -101,6 +107,7 @@ const verifyPasswordResetOTP = async (req, res) => {
             })
         }
         // new_password === retypped_password logic will be implemented in the form data automatically
+        
         // Hash the password
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(newPassword, salt);
