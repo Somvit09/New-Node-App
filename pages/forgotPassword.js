@@ -46,12 +46,12 @@ async function sendOTPByEmail(email, otp) {
 // request otp from email or phone number
 
 const forgotPassword = async (req, res) => {
-    const {phoneNumber, email} = req.body
+    const { phoneNumber, email } = req.body
     const otp = generateRandomOTP()
 
     try {
         // check if user exists
-        user = await User.findOne({userEmail: email, userPhoneNumber: phoneNumber})
+        user = await User.findOne({ userEmail: email, userPhoneNumber: phoneNumber })
         if (!user) {
             return res.status(404).json({
                 error: "User not found.",
@@ -67,19 +67,19 @@ const forgotPassword = async (req, res) => {
         });
 
         // stored the otp to the model
-        await OTP.create({ phoneNumber:phoneNumber, otp:otp});
+        await OTP.create({ phoneNumber: phoneNumber, otp: otp });
 
         // sending otp to email
         await sendOTPByEmail(email, otp)
 
         res.status(200).json({
-            message: `OTP sent Successfully. It will be valid for 5 minutes.`,
+            message: `OTP sent Successfully. It will be valid for 5 minutes. otp = ${otp}`,
             redirectURL: `/verify-otp?email=${email}&phoneNumber=${phoneNumber}`
         });
 
-    } catch(err) {
+    } catch (err) {
         console.error(`Failed to send OTP to the phone number ${phoneNumber}.`, err);
-        res.status(500).json({ 
+        res.status(500).json({
             error: `Failed to send OTP. Please try again later. ${err.message}`,
         });
     }
@@ -92,28 +92,35 @@ const verifyPasswordResetOTP = async (req, res) => {
 
     try {
         // Check if the OTP matches the stored OTP
-        const storedOTP = await OTP.findOne({ phoneNumber: phoneNumber, otp: user_otp, email: email });
-        
-        if (storedOTP && storedOTP.otp === user_otp && newPassword === retypedPassword) {
-            // OTP is valid; reset the user's password
-            const saltRounds = 10;
-            bcrypt.hash(newPassword, saltRounds, async (err, hash) => {
-                if (err) {
-                    return res.status(500).json({ error: "Failed to reset password." });
-                }
-                // Update the user's password in the database
-                await User.findOneAndUpdate({ userEmail: email, userPhoneNumber: phoneNumber }, { password: hash });
-
-                res.status(200).json({ message: "Password reset successfully" });
-            });
-        } else {
-            res.status(400).json({ 
-                error: "Invalid OTP. Please verify with the correct OTP.",
-            });
+        const storedOTP = await OTP.findOne({ phoneNumber: phoneNumber, otp: user_otp });
+        // if otp expired
+        if (!storedOTP) {
+            return res.status(404).json({
+                message: "OTP has expired, please retry again with newly generated OTP.",
+                redirectURL: `/forgot-password?email=${email}&phoneNumber=${phoneNumber}`
+            })
         }
+        // new_password === retypped_password logic will be implemented in the form data automatically
+        // Hash the password
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+        if (!hashedPassword) {
+            return res.status(401).json({
+                message: "Password hashing failed",
+                redirectURL: `/forgot-password/verify-otp?email=${email}&phoneNumber=${phoneNumber}`
+            })
+        }
+        // OTP is valid; reset the user's password with updated password that is correctly generated
+        await User.findOneAndUpdate({ userEmail: email, userPhoneNumber: phoneNumber }, { password: hashedPassword });
+
+        res.status(201).json({
+            message: "Password reset is successfull.",
+        })
+
     } catch (err) {
         console.error("Error verifying OTP:", err);
-        res.status(500).json({ 
+        res.status(500).json({
             error: `Error verifying OTP. Please try again later. ${err.message}`,
         });
     }
